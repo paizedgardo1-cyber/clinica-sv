@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f2027">
+<title>Clínica SV — Visitadora</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0d9488;
+    --teal-dark: #0f766e;
+    --teal-light: #ccfbf1;
+    --ink: #0f1923;
+    --ink2: #2a3a4a;
+    --muted: #6b7f8f;
+    --bg: #f1f5f4;
+    --surface: #ffffff;
+    --border: #e2e8e6;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --gold: #b45309;
+    --gold-light: #fef3c7;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --sidebar: #0f2027;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .header {
+    background: var(--sidebar); color: white; padding: 16px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; padding-top: max(16px, env(safe-area-inset-top));
+  }
+  .header-left h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-left p { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .header-user { background: var(--teal); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+
+  /* SCROLL AREA */
+  .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(80px + var(--safe-bottom)); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; padding-bottom: var(--safe-bottom);
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 4px 8px; gap: 4px; cursor: pointer;
+    color: var(--muted); font-size: 10px; font-weight: 500;
+    transition: color 0.15s; border: none; background: none;
+  }
+  .nav-btn.active { color: var(--teal); }
+  .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--teal); margin-top: -2px; opacity: 0; }
+  .nav-btn.active .nav-dot { opacity: 1; }
+
+  /* PAGES */
+  .page { display: none; padding: 20px 16px; }
+  .page.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-head { margin-bottom: 20px; }
+  .section-head h2 { font-size: 22px; font-weight: 600; color: var(--ink); }
+  .section-head p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border-radius: 16px; padding: 18px; border: 1px solid var(--border); margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--ink2); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .icon-teal { background: var(--teal-light); }
+  .icon-gold { background: var(--gold-light); }
+  .icon-green { background: var(--green-light); }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--ink2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-label span { color: var(--red); }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 13px 14px; border: 1.5px solid var(--border);
+    border-radius: 12px; font-size: 15px; font-family: 'DM Sans'; color: var(--ink);
+    background: var(--surface); outline: none; transition: border-color 0.15s;
+    -webkit-appearance: none; appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--teal); }
+  .form-textarea { resize: none; height: 80px; }
+  .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7f8f' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 42px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* SUBMIT BTN */
+  .btn-submit {
+    width: 100%; padding: 16px; background: var(--teal); color: white;
+    border: none; border-radius: 14px; font-size: 16px; font-weight: 600;
+    font-family: 'DM Sans'; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .btn-submit:active { transform: scale(0.98); background: var(--teal-dark); }
+  .btn-secondary {
+    width: 100%; padding: 14px; background: var(--surface); color: var(--teal);
+    border: 1.5px solid var(--teal); border-radius: 14px; font-size: 15px; font-weight: 600;
+    font-family: 'DM Sans'; cursor: pointer; margin-top: 10px; transition: all 0.15s;
+  }
+  .btn-secondary:active { background: var(--teal-light); }
+
+  /* KPI ROW */
+  .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .kpi-mini { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); text-align: center; }
+  .kpi-mini .val { font-size: 28px; font-weight: 700; color: var(--teal); line-height: 1; }
+  .kpi-mini .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ALERT BADGE */
+  .alert-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--red-light); border-radius: 12px; margin-bottom: 8px; }
+  .alert-item .alert-txt { font-size: 13px; color: var(--red); font-weight: 500; }
+  .alert-item .alert-sub { font-size: 11px; color: var(--muted); }
+
+  /* MEDICO CARD */
+  .medico-item { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--surface); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
+  .medico-item:active { background: var(--bg); }
+  .medico-avatar { width: 42px; height: 42px; border-radius: 12px; background: var(--teal-light); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--teal); flex-shrink: 0; }
+  .medico-info { flex: 1; }
+  .medico-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .medico-esp { font-size: 12px; color: var(--muted); }
+  .medico-badges { display: flex; gap: 6px; margin-top: 4px; }
+  .chip { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 8px; }
+  .chip-A { background: var(--green-light); color: var(--green); }
+  .chip-B { background: #dbeafe; color: #1d4ed8; }
+  .chip-C { background: var(--gold-light); color: var(--gold); }
+  .chip-D { background: var(--red-light); color: var(--red); }
+  .chip-ok { background: var(--green-light); color: var(--green); }
+  .chip-warn { background: var(--red-light); color: var(--red); }
+  .medico-paq { font-size: 20px; font-weight: 700; color: var(--teal); min-width: 32px; text-align: right; }
+
+  /* VISITA ITEM */
+  .visita-item { display: flex; gap: 12px; padding: 14px; background: var(--surface); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 10px; }
+  .visita-line { width: 3px; border-radius: 2px; background: var(--teal); flex-shrink: 0; }
+  .visita-content { flex: 1; }
+  .visita-date { font-size: 11px; color: var(--muted); }
+  .visita-doc { font-size: 14px; font-weight: 600; color: var(--ink); margin: 2px 0; }
+  .visita-tipo { font-size: 12px; }
+  .visita-res { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* SUCCESS TOAST */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: white; padding: 12px 20px; border-radius: 12px;
+    font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* TABS */
+  .tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 3px; margin-bottom: 18px; }
+  .tab { flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 500; color: var(--muted); border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .tab.active { background: var(--surface); color: var(--teal); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+  /* NÚMERO GRANDE */
+  .big-number { font-size: 48px; font-weight: 700; color: var(--teal); text-align: center; line-height: 1; }
+  .big-label { font-size: 13px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .empty-state { text-align: center; padding: 32px 20px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <h1>Clínica SV</h1>
+    <p id="header-sub">Bienvenida, Margarita Aguirre</p>
+  </div>
+  <div class="header-user">MA</div>
+</div>
+
+<!-- SCROLL AREA -->
+<div class="scroll-area">
+
+  <!-- ══ PAGE: INICIO ══════════════════════════════════════════════════ -->
+  <div class="page active" id="page-inicio">
+    <div class="section-head">
+      <h2>Hoy</h2>
+      <p id="fecha-hoy"></p>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-mini">
+        <div class="val" id="ini-visitas">0</div>
+        <div class="lbl">Visitas hoy</div>
+      </div>
+      <div class="kpi-mini">
+        <div class="val" id="ini-mes">0</div>
+        <div class="lbl">Visitas este mes</div>
+      </div>
+    </div>
+
+    <div class="card" id="alertas-card">
+      <div class="card-title">
+        <div class="icon icon-gold">⚠️</div>
+        Médicos por visitar
+      </div>
+      <div id="alertas-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <div class="icon icon-teal">📊</div>
+        Mi resumen del mes
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--teal)" id="res-paq">0</div>
+          <div style="font-size:11px;color:var(--muted)">Paquetes referidos</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--gold)" id="res-visitas-mes">0</div>
+          <div style="font-size:11px;color:var(--muted)">Visitas del mes</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="goPage('visita')">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M12 5v14M5 12h14"/></svg>
+      Registrar visita ahora
+    </button>
+  </div>
+
+  <!-- ══ PAGE: REGISTRAR VISITA ═══════════════════════════════════════ -->
+  <div class="page" id="page-visita">
+    <div class="section-head">
+      <h2>Visitas</h2>
+      <p>Registro de actividad de campo</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchVisitaTab('nuevo', this)">Nueva visita</div>
+      <div class="tab" onclick="switchVisitaTab('historial', this)">Historial</div>
+    </div>
+
+    <div id="visita-tab-nuevo">
+    <div class="card">
+      <div class="card-title"><div class="icon icon-teal">👨‍⚕️</div> Datos de la visita</div>
+
+      <div class="form-group">
+        <label class="form-label">Médico visitado <span>*</span></label>
+        <select class="form-select" id="v-medico" onchange="toggleNuevoMedico('v', this.value)">
+          <option value="">Seleccionar médico...</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="v-nuevo-medico-box" style="display:none">
+        <label class="form-label">Nombre del médico nuevo <span>*</span></label>
+        <input type="text" class="form-input" id="v-nuevo-medico-nombre" placeholder="Ej: Dr. Ramírez Torres">
+        <div style="margin-top:8px">
+          <label class="form-label">Especialidad</label>
+          <input type="text" class="form-input" id="v-nuevo-medico-esp" placeholder="Ej: Ortopedia, Ginecología...">
+        </div>
+        <div style="margin-top:8px;padding:10px 12px;background:var(--gold-light);border-radius:10px;font-size:12px;color:var(--gold)">
+          💡 Este médico se guardará para agregarlo al Google Sheets después
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha <span>*</span></label>
+          <input type="date" class="form-input" id="v-fecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo <span>*</span></label>
+          <select class="form-select" id="v-tipo">
+            <option value="">Tipo...</option>
+            <option>Seguimiento</option>
+            <option>Activación</option>
+            <option>Presentación</option>
+            <option>Reactivación</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Objetivo de la visita</label>
+        <input type="text" class="form-input" id="v-objetivo" placeholder="Ej: Ampliar referencias, revisar resultados...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Resultado <span>*</span></label>
+        <select class="form-select" id="v-resultado-tipo">
+          <option value="">¿Cómo salió?</option>
+          <option value="exitoso">✅ Exitoso — médico receptivo</option>
+          <option value="pendiente">⏳ Pendiente — necesita seguimiento</option>
+          <option value="no_contacto">❌ No se logró contacto</option>
+          <option value="negativo">🚫 Negativo — no interesado</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Motivo si no hubo contacto</label>
+        <select class="form-select" id="v-motivo-nc">
+          <option value="">N/A</option>
+          <option>No estaba en consulta</option>
+          <option>No quiso atender</option>
+          <option>En cirugía</option>
+          <option>Canceló cita</option>
+          <option>Otro</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notas / detalles</label>
+        <textarea class="form-textarea" id="v-notas" placeholder="Ej: Mencionó que tiene varios post-operatorios este mes..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Paquetes generados esta visita</label>
+        <input type="number" class="form-input" id="v-paquetes" placeholder="0" min="0" value="0">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Próximo paso</label>
+          <select class="form-select" id="v-proximo">
+            <option>Visita en 2 semanas</option>
+            <option>Visita en 1 mes</option>
+            <option>Llamada 1 semana</option>
+            <option>Enviar información</option>
+            <option>Sin seguimiento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha próx. contacto</label>
+          <input type="date" class="form-input" id="v-proxima-fecha">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="guardarVisita()">
+      💾 Guardar visita
+    </button>
+    <button class="btn-secondary" onclick="goPage('inicio')">Cancelar</button>
+    </div><!-- end visita-tab-nuevo -->
+
+    <div id="visita-tab-historial" style="display:none">
+      <div id="historial-visitas"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: REFERENCIAS ════════════════════════════════════════════ -->
+  <div class="page" id="page-referencias">
+    <div class="section-head">
+      <h2>Pacientes referidos</h2>
+      <p>Registro de contactos de pacientes que llaman a agendar</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchRefTab('nuevo', this)">Nuevo contacto</div>
+      <div class="tab" onclick="switchRefTab('historial', this)">Historial</div>
+    </div>
+
+    <div id="ref-tab-nuevo">
+      <!-- Fecha automática -->
+      <div class="card" style="margin-bottom:12px;padding:14px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Fecha del contacto</div>
+            <div style="font-size:20px;font-weight:600;color:var(--ink);margin-top:4px" id="r-fecha-display"></div>
+          </div>
+          <div style="background:var(--teal-light);color:var(--teal);font-size:11px;font-weight:600;padding:6px 12px;border-radius:10px">HOY</div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">La fecha se registra automáticamente al guardar</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon icon-gold">📞</div> Datos del contacto</div>
+
+        <div class="form-group">
+          <label class="form-label">Médico que refirió <span>*</span></label>
+          <select class="form-select" id="r-medico" onchange="toggleNuevoMedico('r', this.value)">
+            <option value="">Seleccionar médico...</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="r-nuevo-medico-box" style="display:none">
+          <label class="form-label">Nombre del médico nuevo <span>*</span></label>
+          <input type="text" class="form-input" id="r-nuevo-medico-nombre" placeholder="Ej: Dr. Ramírez Torres">
+          <div style="margin-top:8px">
+            <label class="form-label">Especialidad</label>
+            <input type="text" class="form-input" id="r-nuevo-medico-esp" placeholder="Ej: Ortopedia, Ginecología...">
+          </div>
+          <div style="margin-top:8px;padding:10px 12px;background:var(--gold-light);border-radius:10px;font-size:12px;color:var(--gold)">
+            💡 Este médico se guardará para agregarlo al Google Sheets después
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nombre del paciente</label>
+          <input type="text" class="form-input" id="r-paciente" placeholder="Nombre completo (opcional)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Teléfono de contacto</label>
+          <input type="tel" class="form-input" id="r-telefono" placeholder="Ej: 7890-1234">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de paquete a agendar <span>*</span></label>
+          <select class="form-select" id="r-tipo-paquete">
+            <option value="">Seleccionar tipo...</option>
+            <option value="Post-operatorio">🏥 Post-operatorio — 10 sesiones</option>
+            <option value="Terapéutico">💆 Terapéutico — 10 sesiones</option>
+            <option value="Estético">✨ Estético — 10 sesiones</option>
+            <option value="Post-neurológico">🧠 Post-neurológico — 10 sesiones</option>
+            <option value="Mantenimiento">🔄 Mantenimiento — 5 sesiones</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estado de la cita</label>
+          <select class="form-select" id="r-estado-cita">
+            <option value="Agendada">✅ Cita agendada</option>
+            <option value="Pendiente">⏳ Pendiente de confirmar</option>
+            <option value="No contestó">📵 No contestó — llamar de nuevo</option>
+            <option value="Canceló">❌ Canceló</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Fecha de cita agendada</label>
+          <input type="date" class="form-input" id="r-fecha-cita">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notas</label>
+          <textarea class="form-textarea" id="r-notas" placeholder="Ej: Paciente post-cesárea, viene recomendada por el Dr. López para recuperación..."></textarea>
+        </div>
+
+        <button class="btn-submit" onclick="guardarReferencia()">
+          💾 Guardar contacto
+        </button>
+      </div>
+    </div>
+
+    <div id="ref-tab-historial" style="display:none">
+      <div id="historial-refs"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: MÉDICOS ════════════════════════════════════════════════ -->
+  <div class="page" id="page-medicos">
+    <div class="section-head">
+      <h2>Mis médicos</h2>
+      <p>Cartera de referidores activos</p>
+    </div>
+    <div id="medicos-list"></div>
+  </div>
+
+</div><!-- end scroll-area -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="goPage('inicio', this)" id="nav-inicio">
+    <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Inicio
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="goPage('visita', this)" id="nav-visita">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    Visita
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="goPage('referencias', this)" id="nav-referencias">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Referencias
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="goPage('medicos', this)" id="nav-medicos">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Médicos
+    <div class="nav-dot"></div>
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const MEDICOS = [
+  { id: 1, nombre: "Dr. López Martínez", especialidad: "Traumatología", ciudad: "San Salvador", estado: "Activo", ultimaVisita: "2026-04-01", paxMes: 3, paxM1: 4, paxM2: 0 },
+  { id: 2, nombre: "Dra. Martínez García", especialidad: "Neurología", ciudad: "Santa Tecla", estado: "Activo", ultimaVisita: "2026-04-05", paxMes: 2, paxM1: 2, paxM2: 0 },
+  { id: 3, nombre: "Dr. Gómez Rivas", especialidad: "Medicina General", ciudad: "San Salvador", estado: "En Activación", ultimaVisita: "2026-03-20", paxMes: 0, paxM1: 0, paxM2: 0 },
+  { id: 4, nombre: "Dra. Fuentes López", especialidad: "Ginecología", ciudad: "San Salvador", estado: "Activo", ultimaVisita: "2026-04-08", paxMes: 1, paxM1: 3, paxM2: 0 },
+  { id: 5, nombre: "Dr. Rivera Pérez", especialidad: "Ortopedia", ciudad: "San Miguel", estado: "Inactivo", ultimaVisita: "2026-02-01", paxMes: 0, paxM1: 0, paxM2: 0 },
+];
+
+const VISITAS_KEY = 'iv_visitas';
+const REFS_KEY = 'iv_referencias';
+const TICKET = 500;
+const COMISION = 0.02;
+
+function getVisitas() { try { return JSON.parse(localStorage.getItem(VISITAS_KEY) || '[]'); } catch(e) { return []; } }
+function getRefs() { try { return JSON.parse(localStorage.getItem(REFS_KEY) || '[]'); } catch(e) { return []; } }
+function saveVisitas(v) { localStorage.setItem(VISITAS_KEY, JSON.stringify(v)); }
+function saveRefs(r) { localStorage.setItem(REFS_KEY, JSON.stringify(r)); }
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function diasDesde(fecha) {
+  if (!fecha) return 999;
+  return Math.floor((new Date() - new Date(fecha)) / 86400000);
+}
+
+function categoria(prom) {
+  if (prom >= 15) return 'A';
+  if (prom >= 8) return 'B';
+  if (prom >= 3) return 'C';
+  return 'D';
+}
+
+function getMedico(id) { return MEDICOS.find(m => m.id == id); }
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function mesActual() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.textContent = emoji + ' ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const navBtn = btn || document.getElementById('nav-' + id);
+  if (navBtn) navBtn.classList.add('active');
+  document.querySelector('.scroll-area').scrollTop = 0;
+  if (id === 'inicio') buildInicio();
+  if (id === 'medicos') buildMedicos();
+  if (id === 'referencias') buildHistorial();
+}
+
+// ── INIT FORMS ────────────────────────────────────────────────────────────
+function toggleNuevoMedico(prefix, val) {
+  const box = document.getElementById(prefix + '-nuevo-medico-box');
+  if (box) box.style.display = val === 'nuevo' ? 'block' : 'none';
+}
+
+function initForms() {
+  // Fecha hoy
+  document.getElementById('v-fecha').value = today();
+  // Proxima fecha default (2 semanas)
+  const prox = new Date(); prox.setDate(prox.getDate() + 14);
+  document.getElementById('v-proxima-fecha').value = prox.toISOString().split('T')[0];
+
+  // Fecha cita default (1 semana)
+  const cita = new Date(); cita.setDate(cita.getDate() + 7);
+  document.getElementById('r-fecha-cita').value = cita.toISOString().split('T')[0];
+
+  // Mostrar fecha actual en referencias
+  const opts2 = { weekday: 'long', day: 'numeric', month: 'long' };
+  document.getElementById('r-fecha-display').textContent = new Date().toLocaleDateString('es-SV', opts2);
+
+  // Fecha hoy display inicio
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-SV', opts);
+
+  // Llenar selects de médicos
+  const opts_med = MEDICOS.filter(m => m.estado !== 'Inactivo').map(m =>
+    `<option value="${m.id}">${m.nombre} — ${m.especialidad}</option>`
+  ).join('');
+  const nuevo_opt = '<option value="nuevo">➕ No está en la lista — agregar nuevo</option>';
+  document.getElementById('v-medico').innerHTML = '<option value="">Seleccionar médico...</option>' + opts_med + nuevo_opt;
+  document.getElementById('r-medico').innerHTML = '<option value="">Seleccionar médico...</option>' + opts_med + nuevo_opt;
+}
+
+// ── INICIO ────────────────────────────────────────────────────────────────
+function buildInicio() {
+  const visitas = getVisitas();
+  const hoy = today();
+  const mes = mesActual();
+
+  const visitasHoy = visitas.filter(v => v.fecha === hoy).length;
+  const visitasMes = visitas.filter(v => v.fecha && v.fecha.startsWith(mes)).length;
+  document.getElementById('ini-visitas').textContent = visitasHoy;
+  document.getElementById('ini-mes').textContent = visitasMes;
+
+  const refs = getRefs();
+  const refsMes = refs.filter(r => r.mes === mes);
+  document.getElementById('res-paq').textContent = refsMes.length;
+  document.getElementById('res-visitas-mes').textContent = visitasMes;
+
+  // Alertas
+  const alertas = MEDICOS.filter(m => m.estado === 'Activo' && diasDesde(m.ultimaVisita) >= 30);
+  const alertList = document.getElementById('alertas-list');
+  if (alertas.length === 0) {
+    alertList.innerHTML = '<p style="font-size:13px;color:var(--green);font-weight:500">✅ Sin alertas pendientes</p>';
+  } else {
+    alertList.innerHTML = alertas.map(m => `
+      <div class="alert-item">
+        <div>
+          <div class="alert-txt">${m.nombre}</div>
+          <div class="alert-sub">${diasDesde(m.ultimaVisita)} días sin visita · ${m.especialidad}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+// ── MÉDICOS LIST ──────────────────────────────────────────────────────────
+function buildMedicos() {
+  const list = document.getElementById('medicos-list');
+  const sorted = [...MEDICOS].sort((a, b) => b.paxMes - a.paxMes);
+  list.innerHTML = sorted.map(m => {
+    const prom = (m.paxMes + m.paxM1 + m.paxM2) / 3;
+    const cat = categoria(prom);
+    const dias = diasDesde(m.ultimaVisita);
+    const alerta = dias >= 30;
+    const initials = m.nombre.split(' ').map(w => w[0]).slice(0, 2).join('');
+    return `<div class="medico-item">
+      <div class="medico-avatar">${initials}</div>
+      <div class="medico-info">
+        <div class="medico-name">${m.nombre}</div>
+        <div class="medico-esp">${m.especialidad} · ${m.ciudad}</div>
+        <div class="medico-badges">
+          <span class="chip chip-${cat}">Cat. ${cat}</span>
+          <span class="chip ${alerta ? 'chip-warn' : 'chip-ok'}">${alerta ? '⚠️ Visitar' : '✅ OK'}</span>
+          <span class="chip" style="background:var(--bg);color:var(--muted)">${m.estado}</span>
+        </div>
+      </div>
+      <div class="medico-paq">${m.paxMes}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── API GOOGLE SHEETS ─────────────────────────────────────────────────────
+const API_URL = 'https://script.google.com/macros/s/AKfycbx3cO_5WWmKg0toFgVQst_xBXSmWvALuSzcGnRqibDX5QcLnPZBrKpEH-4oNdwF5-gW/exec';
+
+async function sendToSheets(data) {
+  try {
+    const url = API_URL + '?data=' + encodeURIComponent(JSON.stringify(data));
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }, 5000);
+    return true;
+  } catch(err) {
+    console.error('Error:', err);
+    return false;
+  }
+}
+
+// ── GUARDAR VISITA ────────────────────────────────────────────────────────
+function guardarVisita() {
+  const medId = document.getElementById('v-medico').value;
+  const fecha = document.getElementById('v-fecha').value;
+  const tipo = document.getElementById('v-tipo').value;
+  const resultado = document.getElementById('v-resultado-tipo').value;
+
+  if (!medId) { showToast('Selecciona un médico', '⚠️'); return; }
+  if (!fecha) { showToast('Ingresa la fecha', '⚠️'); return; }
+  if (!tipo) { showToast('Selecciona el tipo de visita', '⚠️'); return; }
+  if (!resultado) { showToast('Selecciona el resultado', '⚠️'); return; }
+
+  let medicoNombre, medicoEsp;
+  if (medId === 'nuevo') {
+    medicoNombre = document.getElementById('v-nuevo-medico-nombre').value.trim();
+    medicoEsp = document.getElementById('v-nuevo-medico-esp').value.trim();
+    if (!medicoNombre) { showToast('Escribe el nombre del médico nuevo', '⚠️'); return; }
+    // Guardar médico nuevo en lista pendiente
+    const pendientes = JSON.parse(localStorage.getItem('iv_medicos_nuevos') || '[]');
+    pendientes.push({ nombre: medicoNombre, especialidad: medicoEsp, fecha: today() });
+    localStorage.setItem('iv_medicos_nuevos', JSON.stringify(pendientes));
+  } else {
+    const med = getMedico(medId);
+    medicoNombre = med ? med.nombre : '';
+    medicoEsp = med ? med.especialidad : '';
+  }
+  const visita = {
+    id: Date.now(),
+    fecha,
+    medicoId: medId === 'nuevo' ? 'NUEVO' : medId,
+    medico: medicoNombre,
+    especialidad: medicoEsp,
+    tipo,
+    objetivo: document.getElementById('v-objetivo').value,
+    resultado,
+    motivoNC: document.getElementById('v-motivo-nc').value,
+    notas: document.getElementById('v-notas').value,
+    paquetes: parseInt(document.getElementById('v-paquetes').value) || 0,
+    proximoPaso: document.getElementById('v-proximo').value,
+    proximaFecha: document.getElementById('v-proxima-fecha').value,
+    visitadora: 'Margarita Aguirre',
+    timestamp: new Date().toISOString()
+  };
+
+  const visitas = getVisitas();
+  visitas.push(visita);
+  saveVisitas(visitas);
+
+  // Enviar a Google Sheets
+  sendToSheets({ tipo: 'visita', ...visita });
+
+  // Si médico nuevo, enviarlo también
+  if (medId === 'nuevo') {
+    sendToSheets({ tipo: 'medico_nuevo', nombre: medicoNombre, especialidad: medicoEsp });
+  }
+
+  // Reset form
+  document.getElementById('v-medico').value = '';
+  document.getElementById('v-tipo').value = '';
+  document.getElementById('v-resultado-tipo').value = '';
+  document.getElementById('v-objetivo').value = '';
+  document.getElementById('v-notas').value = '';
+  document.getElementById('v-paquetes').value = '0';
+  document.getElementById('v-motivo-nc').value = '';
+  document.getElementById('v-fecha').value = today();
+
+  showToast('Visita guardada correctamente');
+  setTimeout(() => goPage('inicio'), 1200);
+}
+
+// ── GUARDAR REFERENCIA ────────────────────────────────────────────────────
+function guardarReferencia() {
+  const medId = document.getElementById('r-medico').value;
+  const tipoPaquete = document.getElementById('r-tipo-paquete').value;
+
+  if (!medId) { showToast('Selecciona el médico que refirió', '⚠️'); return; }
+  if (!tipoPaquete) { showToast('Selecciona el tipo de paquete', '⚠️'); return; }
+
+  let medicoNombre, medicoEsp;
+  if (medId === 'nuevo') {
+    medicoNombre = document.getElementById('r-nuevo-medico-nombre').value.trim();
+    medicoEsp = document.getElementById('r-nuevo-medico-esp').value.trim();
+    if (!medicoNombre) { showToast('Escribe el nombre del médico nuevo', '⚠️'); return; }
+    const pendientes = JSON.parse(localStorage.getItem('iv_medicos_nuevos') || '[]');
+    pendientes.push({ nombre: medicoNombre, especialidad: medicoEsp, fecha: today() });
+    localStorage.setItem('iv_medicos_nuevos', JSON.stringify(pendientes));
+  } else {
+    const med = getMedico(medId);
+    medicoNombre = med ? med.nombre : '';
+    medicoEsp = med ? med.especialidad : '';
+  }
+
+  const ref = {
+    id: Date.now(),
+    fecha: today(),
+    mes: mesActual(),
+    medicoId: medId === 'nuevo' ? 'NUEVO' : medId,
+    medico: medicoNombre,
+    especialidad: medicoEsp,
+    paciente: document.getElementById('r-paciente').value,
+    telefono: document.getElementById('r-telefono').value,
+    tipoPaquete,
+    estadoCita: document.getElementById('r-estado-cita').value,
+    fechaCita: document.getElementById('r-fecha-cita').value,
+    notas: document.getElementById('r-notas').value,
+    ingreso: TICKET,
+    visitadora: 'Margarita Aguirre',
+    timestamp: new Date().toISOString()
+  };
+
+  const refs = getRefs();
+  refs.push(ref);
+  saveRefs(refs);
+
+  // Enviar a Google Sheets
+  sendToSheets({ tipo: 'referido', ...ref });
+
+  // Si médico nuevo, enviarlo también
+  if (medId === 'nuevo') {
+    sendToSheets({ tipo: 'medico_nuevo', nombre: medicoNombre, especialidad: medicoEsp });
+  }
+
+  document.getElementById('r-medico').value = '';
+  document.getElementById('r-paciente').value = '';
+  document.getElementById('r-telefono').value = '';
+  document.getElementById('r-tipo-paquete').value = '';
+  document.getElementById('r-notas').value = '';
+  document.getElementById('r-estado-cita').value = 'Agendada';
+
+  showToast('Contacto registrado correctamente');
+  buildHistorial();
+}
+
+// ── HISTORIAL REFS ────────────────────────────────────────────────────────
+function buildHistorial() {
+  const refs = getRefs();
+  const hist = document.getElementById('historial-refs');
+  if (refs.length === 0) {
+    hist.innerHTML = '<div class="empty-state">No hay contactos registrados aún</div>';
+    return;
+  }
+  const sorted = [...refs].sort((a, b) => b.id - a.id);
+  const estadoColor = { 'Agendada': 'chip-ok', 'Pendiente': 'chip-C', 'No contestó': 'chip-D', 'Canceló': 'chip-D' };
+  hist.innerHTML = sorted.map(r => `
+    <div class="visita-item" id="ref-${r.id}">
+      <div class="visita-line" style="background:var(--gold)"></div>
+      <div class="visita-content" style="flex:1">
+        <div class="visita-date">${r.fecha} · Ref: ${r.medico}</div>
+        <div class="visita-doc">${r.paciente || 'Paciente sin nombre'}</div>
+        <div style="display:flex;gap:6px;margin:4px 0;flex-wrap:wrap">
+          <span class="chip chip-B">${r.tipoPaquete}</span>
+          <span class="chip ${estadoColor[r.estadoCita] || 'chip-C'}">${r.estadoCita}</span>
+        </div>
+        ${r.fechaCita ? `<div class="visita-res">Cita: ${r.fechaCita}${r.telefono ? ' · ' + r.telefono : ''}</div>` : ''}
+        ${r.notas ? `<div class="visita-res">${r.notas}</div>` : ''}
+      </div>
+      <button onclick="eliminarReferencia(${r.id})" style="background:var(--red-light);border:none;color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;flex-shrink:0">🗑</button>
+    </div>`).join('');
+}
+
+function switchVisitaTab(tab, el) {
+  document.querySelectorAll('#page-visita .tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('visita-tab-nuevo').style.display = tab === 'nuevo' ? 'block' : 'none';
+  document.getElementById('visita-tab-historial').style.display = tab === 'historial' ? 'block' : 'none';
+  if (tab === 'historial') buildHistorialVisitas();
+}
+
+function buildHistorialVisitas() {
+  const visitas = getVisitas();
+  const hist = document.getElementById('historial-visitas');
+  if (visitas.length === 0) {
+    hist.innerHTML = '<div class="empty-state">No hay visitas registradas aún</div>';
+    return;
+  }
+  const sorted = [...visitas].sort((a, b) => b.id - a.id);
+  const resColor = { exitoso: 'chip-ok', pendiente: 'chip-C', no_contacto: 'chip-D', negativo: 'chip-D' };
+  const resLabel = { exitoso: '✅ Exitoso', pendiente: '⏳ Pendiente', no_contacto: '❌ Sin contacto', negativo: '🚫 Negativo' };
+  hist.innerHTML = sorted.map(v => `
+    <div class="visita-item" id="vis-${v.id}">
+      <div class="visita-line"></div>
+      <div class="visita-content" style="flex:1">
+        <div class="visita-date">${v.fecha}</div>
+        <div class="visita-doc">${v.medico}</div>
+        <div style="display:flex;gap:6px;margin:4px 0;flex-wrap:wrap">
+          <span class="chip chip-B">${v.tipo}</span>
+          <span class="chip ${resColor[v.resultado] || 'chip-C'}">${resLabel[v.resultado] || v.resultado}</span>
+        </div>
+        ${v.notas ? `<div class="visita-res">${v.notas}</div>` : ''}
+        ${v.paquetes > 0 ? `<div class="visita-res" style="color:var(--teal);font-weight:600">${v.paquetes} paquetes generados</div>` : ''}
+      </div>
+      <button onclick="eliminarVisita(${v.id})" style="background:var(--red-light);border:none;color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;flex-shrink:0">🗑</button>
+    </div>`).join('');
+}
+
+function eliminarVisita(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const visitas = getVisitas().filter(v => v.id !== id);
+  saveVisitas(visitas);
+  buildHistorialVisitas();
+  buildInicio();
+  showToast('Registro eliminado', '🗑');
+}
+
+function eliminarReferencia(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const refs = getRefs().filter(r => r.id !== id);
+  saveRefs(refs);
+  buildHistorial();
+  showToast('Registro eliminado', '🗑');
+}
+
+function switchRefTab(tab, el) {
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ref-tab-nuevo').style.display = tab === 'nuevo' ? 'block' : 'none';
+  document.getElementById('ref-tab-historial').style.display = tab === 'historial' ? 'block' : 'none';
+  if (tab === 'historial') buildHistorial();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+initForms();
+buildInicio();
+buildMedicos();
+</script>
+</body>
+</html>
